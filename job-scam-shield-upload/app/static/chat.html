@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Check a Chat · Job Scam Shield</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<main class="container narrow">
+  <div class="page-head">
+    <a class="back" href="/">← All tools</a>
+    <h1>🗨️ Check a WhatsApp or Telegram chat</h1>
+    <p>Task scams look harmless one message at a time. Upload or paste the whole conversation and we'll show
+      how far it has moved through the scam script, from the first "easy job" message to "pay more to withdraw".</p>
+  </div>
+
+  <div class="card">
+    <h3>Step 1 · Export the chat</h3>
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="android">WhatsApp (Android)</button>
+      <button role="tab" aria-selected="false" data-tab="iphone">WhatsApp (iPhone)</button>
+      <button role="tab" aria-selected="false" data-tab="telegram">Telegram</button>
+    </div>
+    <div data-panel="android"><ol class="steps-list">
+      <li>Open the chat → tap <strong>⋮</strong> (top right) → <strong>More</strong> → <strong>Export chat</strong>.</li>
+      <li>Choose <strong>Without media</strong>.</li>
+      <li>Save or send the <code>.txt</code> file to yourself, then upload it below.</li></ol></div>
+    <div data-panel="iphone" class="hidden"><ol class="steps-list">
+      <li>Open the chat → tap the contact's name → <strong>Export Chat</strong> → <strong>Without Media</strong>.</li>
+      <li>You get a <code>.zip</code>. Open it and take out <code>_chat.txt</code>.</li>
+      <li>Upload <code>_chat.txt</code> below. (The Telegram bot accepts the .zip directly.)</li></ol></div>
+    <div data-panel="telegram" class="hidden"><ol class="steps-list">
+      <li>Select the messages (long-press one, then tap the others) and copy them.</li>
+      <li>Paste them in the box below. Lines like <code>Name: message</code> work best.</li>
+      <li>Or forward them to the Job Scam Shield Telegram bot (see <a href="/tools">Browser &amp; Telegram</a>).</li></ol></div>
+  </div>
+
+  <form id="form" class="card">
+    <h3>Step 2 · Upload or paste it</h3>
+    <div class="dropzone" id="drop" tabindex="0" role="button" aria-label="Upload a chat export">
+      <input type="file" accept=".txt,text/plain">
+      <div class="big" aria-hidden="true">📥</div>
+      <strong id="dropTitle">Drop the .txt file here, or click to choose</strong>
+      <span class="muted small" id="dropSub">Your chat is checked and not stored.</span>
+    </div>
+
+    <label for="text">…or paste the conversation</label>
+    <textarea id="text" maxlength="200000" placeholder="5/21/26, 7:11 PM - +91 90000 00001: Hello! We found your profile on Naukri…"></textarea>
+    <div class="field-foot"><button type="button" class="chip" id="example">Load an example scam chat</button><span id="count">0 messages detected</span></div>
+
+    <label for="me">Your name in the chat <span class="hint">(so your own replies aren't counted)</span></label>
+    <input id="me" type="text" placeholder="As it appears in the chat, e.g. Rahul" autocomplete="off">
+
+    <details class="more">
+      <summary>Advanced options</summary>
+      <label class="switch"><input id="llm" type="checkbox">
+        <span>Also analyse with AI<br><span class="hint">Understands Hindi and unusual wording. Sends the chat to Anthropic's Claude API.</span></span></label>
+    </details>
+
+    <div class="actions"><button class="btn btn-primary btn-lg" id="go" type="submit">Analyse chat</button></div>
+  </form>
+
+  <div id="result"></div>
+</main>
+<script src="/static/js/common.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const EXAMPLE = `5/21/26, 7:11 PM - +91 90000 00001: Hello! I am Priya from DigitalBoost Marketing. We found your profile on Naukri.
+5/21/26, 7:11 PM - +91 90000 00001: We have a part time job for students. Earn Rs 3000 per day, only 1 hour daily. Interested?
+5/21/26, 7:14 PM - Rahul: Yes, what is the work?
+5/21/26, 7:15 PM - +91 90000 00001: Very simple. Liking YouTube videos and sending screenshots. Rs 50 per like.
+5/21/26, 7:15 PM - +91 90000 00001: Please contact my mentor on Telegram for your tasks: https://t.me/mentor_anjali_hr
+5/21/26, 7:42 PM - +91 90000 00001: Great! You completed 3 tasks and received Rs 150 in your account.
+5/22/26, 11:05 AM - +91 90000 00001: Today you are eligible for VIP tasks with 30% commission.
+5/22/26, 11:06 AM - +91 90000 00001: Deposit Rs 2,000 for the merchant task, you will get Rs 2,600 back in 30 minutes. Pay here: vipmerchant77@axl
+5/22/26, 11:50 AM - Rahul: Paid. When will I get the money?
+5/22/26, 12:31 PM - +91 90000 00001: Your account is frozen. Pay Rs 5,000 tax to withdraw or you will lose all the money.`;
+
+  // Tabs
+  document.querySelectorAll("[role=tab]").forEach((tab) => tab.addEventListener("click", () => {
+    document.querySelectorAll("[role=tab]").forEach((t) => t.setAttribute("aria-selected", t === tab));
+    document.querySelectorAll("[data-panel]").forEach((p) => p.classList.toggle("hidden", p.dataset.panel !== tab.dataset.tab));
+  }));
+
+  // Rough message count so students can see the file was understood.
+  const LINE = /^\[?\d{1,2}[/.\-]\d{1,2}[/.\-]\d{2,4},?\s+\d{1,2}:\d{2}.*?[-–\]]\s*[^:]+:\s/;
+  const NAMED = /^[^:\n]{1,40}:\s+\S/;
+  function updateCount() {
+    const lines = $("text").value.split("\n");
+    const n = lines.filter((l) => LINE.test(l)).length || lines.filter((l) => NAMED.test(l)).length;
+    $("count").textContent = `${n} message${n === 1 ? "" : "s"} detected`;
+  }
+  $("text").addEventListener("input", updateCount);
+
+  JSS.dropzone($("drop"), async (file) => {
+    if (!/\.txt$/i.test(file.name) && file.type !== "text/plain") {
+      JSS.toast(/\.zip$/i.test(file.name) ? "That's a .zip: open it and upload the _chat.txt inside." : "Please choose the chat's .txt file.");
+      return;
+    }
+    if (file.size > 2_000_000) { JSS.toast("That file is too large. Export a shorter chat (without media)."); return; }
+    $("text").value = await file.text();
+    $("drop").classList.add("has-file");
+    $("dropTitle").textContent = `✓ ${file.name}`;
+    $("dropSub").textContent = "Loaded. Add your name below, then analyse.";
+    updateCount();
+  });
+
+  $("example").addEventListener("click", () => {
+    $("text").value = EXAMPLE; $("me").value = "Rahul"; updateCount(); $("result").innerHTML = "";
+  });
+
+  function chatPanel(chat) {
+    if (!chat) {
+      return `<div class="card" style="margin-top:16px"><h3>Conversation</h3>
+        <p class="muted">We couldn't split this into separate messages, so it was checked as one message.
+        Upload a WhatsApp export or paste lines like <code>Name: message</code> to see the scam stages.</p></div>`;
+    }
+    const d = chat.details;
+    const rows = d.timeline.map((t) => `<li>${JSS.stageTag(t.stage)}<span class="text">
+      ${t.sender ? `<strong>${JSS.esc(t.sender)}:</strong> ` : ""}${JSS.esc(t.preview)}${t.source === "claude" ? ' <span class="badge">AI</span>' : ""}</span></li>`).join("");
+    const furthest = d.furthest_stage ? JSS.STAGES[d.furthest_stage] : null;
+    return `<div class="card" style="margin-top:16px">
+      <h3>How far has the scam gone?</h3>
+      <p class="muted">${furthest ? `Stage ${furthest[0]} of 5: <strong>${furthest[1]}</strong>.` : "No scam stages found."}
+        ${d.message_count} messages read${d.llm_used ? ", AI-assisted" : ""}.</p>
+      ${JSS.stageStepper(d.furthest_stage)}
+      ${d.llm_summary ? `<p class="callout small">AI summary: ${JSS.esc(d.llm_summary)}</p>` : ""}
+      ${!d.llm_used && $("llm").checked ? '<p class="callout warn small">AI analysis wasn\'t available (no API key set), so only the rules were used.</p>' : ""}
+      <h3 style="margin-top:16px">Message by message</h3>
+      <ul class="timeline">${rows}</ul>
+    </div>`;
+  }
+
+  // /chat#example=1 loads and analyses the example: handy for demos.
+  if (JSS.takeHashParams().example) {
+    queueMicrotask(() => { $("example").click(); $("form").requestSubmit(); });
+  }
+
+  $("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!$("text").value.trim()) { JSS.toast("Upload or paste a conversation first."); return; }
+    await JSS.busy($("go"), "Analysing…", async () => {
+      try {
+        const { ok, status, data } = await JSS.api("/api/analyze", {
+          text: $("text").value, user_name: $("me").value.trim() || null, use_llm: $("llm").checked,
+        });
+        if (!ok) { JSS.toast(JSS.errorText(data, status)); return; }
+        JSS.renderResult($("result"), data, chatPanel(data.checks.find((c) => c.check === "chat_stages")));
+      } catch (err) { JSS.toast(err.message); }
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Check an Offer Letter · Job Scam Shield</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<main class="container narrow">
+  <div class="page-head">
+    <a class="back" href="/">← All tools</a>
+    <h1>📄 Check an offer letter</h1>
+    <p>Upload the offer letter PDF. We check how the file was made, the company's CIN and GSTIN numbers,
+      the contacts and links inside it, and whether it asks you for money.</p>
+  </div>
+
+  <form id="form" class="card">
+    <div class="dropzone" id="drop" tabindex="0" role="button" aria-label="Upload an offer letter PDF">
+      <input type="file" accept="application/pdf,.pdf">
+      <div class="big" aria-hidden="true">📄</div>
+      <strong id="dropTitle">Drop the offer letter PDF here, or click to choose</strong>
+      <span class="muted small" id="dropSub">Up to 10 MB. The file is checked and not stored.</span>
+    </div>
+
+    <div class="label">No letter handy? Try a sample <span class="hint">(fictional companies, made for testing)</span>:</div>
+    <div class="chips" id="samples">
+      <button type="button" class="chip" data-sample="fake_offer_brightwave.pdf">🚩 Fake offer (Canva, deposit)</button>
+      <button type="button" class="chip" data-sample="fake_tcs_offer_canva.pdf">🚩 Fake "TCS" offer</button>
+      <button type="button" class="chip" data-sample="genuine_letter_edited_later.pdf">✏️ Genuine but edited later</button>
+      <button type="button" class="chip" data-sample="genuine_style_offer.pdf">✅ Genuine-style offer</button>
+    </div>
+
+    <label for="company">Company it claims to be from <span class="hint">(optional, we usually detect it)</span></label>
+    <input id="company" type="text" placeholder="e.g. TCS" autocomplete="off">
+
+    <details class="more">
+      <summary>Advanced options</summary>
+      <label class="switch"><input id="llm" type="checkbox">
+        <span>Also review with AI<br><span class="hint">Needed for scanned letters (photos/scans with no text). Sends the PDF to Anthropic's Claude API.</span></span></label>
+    </details>
+
+    <div class="actions"><button class="btn btn-primary btn-lg" id="go" type="submit">Check offer letter</button></div>
+  </form>
+
+  <div class="callout small" style="margin-top:16px">
+    <strong>Good to know:</strong> a valid-looking CIN or GSTIN doesn't prove a letter is real, because forgers copy real
+    companies' numbers. Always confirm the offer on the company's official careers portal or with their official HR email.
+  </div>
+
+  <div id="result"></div>
+</main>
+<script src="/static/js/common.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  let chosen = null;
+  // Sample letters use fictional companies whose domains don't exist, so they're checked without
+  // the online domain lookups. Uploaded letters always get the full online checks.
+  let chosenIsSample = false;
+
+  function choose(file) {
+    if (!/\.pdf$/i.test(file.name) && file.type !== "application/pdf") { JSS.toast("Please choose a PDF file."); return; }
+    if (file.size > 10_000_000) { JSS.toast("That PDF is larger than 10 MB."); return; }
+    chosen = file;
+    $("drop").classList.add("has-file");
+    $("dropTitle").textContent = `✓ ${file.name}`;
+    $("dropSub").textContent = `${(file.size / 1024).toFixed(0)} KB · ready to check`;
+    $("result").innerHTML = "";
+  }
+  JSS.dropzone($("drop"), (file) => {
+    document.querySelectorAll("#samples .chip").forEach((c) => c.setAttribute("aria-pressed", "false"));
+    chosenIsSample = false;
+    choose(file);
+  });
+
+  $("samples").addEventListener("click", async (e) => {
+    const chip = e.target.closest("[data-sample]");
+    if (!chip) return;
+    try {
+      const res = await fetch(`/samples/letters/${chip.dataset.sample}`);
+      if (!res.ok) throw new Error();
+      choose(new File([await res.blob()], chip.dataset.sample, { type: "application/pdf" }));
+      chosenIsSample = true;
+      document.querySelectorAll("#samples .chip").forEach((c) => c.setAttribute("aria-pressed", c === chip));
+      check();
+    } catch { JSS.toast("Couldn't load that sample. Is the server running?"); }
+  });
+
+  function letterPanel(letter) {
+    if (!letter) return "";
+    const d = letter.details, meta = d.metadata || {};
+    const made = [meta.creator, meta.producer].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(" / ");
+    const ids = Object.entries(d.identifiers || {}).map(([k, v]) =>
+      `<dt>${JSS.esc(k.split(" ")[0])}</dt><dd>${JSS.esc(k.split(" ").slice(1).join(" "))}
+        <span class="badge ${v === "invalid" ? "bad" : "ok"}">${v === "invalid" ? "✗ invalid" : "✓ valid format"}</span></dd>`).join("");
+    const ai = d.ai_review;
+    return `<div class="card" style="margin-top:16px">
+      <h3>About this letter</h3>
+      <dl class="kv">
+        <dt>Company</dt><dd>${JSS.esc(d.company || "Not detected")}</dd>
+        <dt>Pages</dt><dd>${d.pages ?? "?"}${d.text_chars === 0 ? " (scanned, no readable text)" : ""}</dd>
+        <dt>Made with</dt><dd>${JSS.esc(made || "Unknown")}</dd>
+        ${meta.created ? `<dt>Created</dt><dd>${new Date(meta.created).toLocaleString()}</dd>` : ""}
+        ${meta.modified && meta.modified !== meta.created ? `<dt>Modified</dt><dd>${new Date(meta.modified).toLocaleString()}</dd>` : ""}
+        ${ids}
+        ${(d.links || []).length ? `<dt>Links inside</dt><dd>${d.links.map(JSS.esc).join("<br>")}</dd>` : ""}
+      </dl>
+      ${ai ? `<p class="callout small" style="margin-top:12px">AI review: ${JSS.esc(ai.summary)}</p>` : ""}
+      ${ai === null && $("llm").checked ? '<p class="callout warn small" style="margin-top:12px">AI review wasn\'t available (no API key set), so only the rules were used.</p>' : ""}
+    </div>`;
+  }
+
+  async function check() {
+    if (!chosen) { JSS.toast("Choose a PDF first, or try a sample."); return; }
+    await JSS.busy($("go"), "Checking…", async () => {
+      const form = new FormData();
+      form.append("file", chosen);
+      if ($("company").value.trim()) form.append("claimed_company", $("company").value.trim());
+      form.append("use_llm", $("llm").checked);
+      if (chosenIsSample) form.append("online", "false");
+      try {
+        const { ok, status, data } = await JSS.api("/api/check/offer-letter", form);
+        if (!ok) { JSS.toast(JSS.errorText(data, status)); return; }
+        JSS.renderResult($("result"), data, letterPanel(data.checks.find((c) => c.check === "offer_letter")));
+      } catch (err) { JSS.toast(err.message); }
+    });
+  }
+  $("form").addEventListener("submit", (e) => { e.preventDefault(); check(); });
+
+  // /offer-letter#sample=<file>.pdf loads and checks a sample letter: handy for demos.
+  const demo = JSS.takeHashParams().sample;
+  if (demo) document.querySelector(`[data-sample="${CSS.escape(demo)}"]`)?.click();
+</script>
+</body>
+</html>

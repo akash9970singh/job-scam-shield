@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Job Scam Shield</title>
+  <meta name="description" content="Check if a job or internship offer is a scam.">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<main class="container">
+  <section class="hero">
+    <h1>Is this job offer real?</h1>
+    <p class="lead">Fake internships, "pay a registration fee" offers and Telegram task scams target students every day.
+      Check anything suspicious in seconds.</p>
+
+    <form class="quick card" id="quick">
+      <label for="quickText" style="margin-top:0">Paste a message to check it right now</label>
+      <textarea id="quickText" placeholder="Congratulations! You are selected for the Data Analyst internship. Pay the registration fee of Rs 1,499 to…"></textarea>
+      <div class="actions">
+        <span class="small muted">Or pick what you want to check below.</span>
+        <button class="btn btn-primary btn-lg" type="submit">Check for scam →</button>
+      </div>
+    </form>
+  </section>
+
+  <h2 class="section-title">What would you like to do?</h2>
+  <div class="grid">
+    <a class="feature" href="/check">
+      <span class="icon" aria-hidden="true">💬</span>
+      <h3>Check a message or email</h3>
+      <p>An SMS, email, LinkedIn message or job post. We check the sender, payment requests and scam wording.</p>
+      <span class="go">Check a message →</span>
+    </a>
+    <a class="feature" href="/chat">
+      <span class="icon" aria-hidden="true">🗨️</span>
+      <h3>Check a WhatsApp or Telegram chat</h3>
+      <p>Upload a chat export. We show how far the conversation has gone through the scam script.</p>
+      <span class="go">Check a chat →</span>
+    </a>
+    <a class="feature" href="/offer-letter">
+      <span class="icon" aria-hidden="true">📄</span>
+      <h3>Check an offer letter</h3>
+      <p>Upload the PDF. We look for signs of forgery: fake company IDs, editing tools, lookalike links.</p>
+      <span class="go">Check a letter →</span>
+    </a>
+    <a class="feature" href="/report">
+      <span class="icon" aria-hidden="true">🚩</span>
+      <h3>Report a scammer</h3>
+      <p>Report a UPI ID, phone number, website or email so students at other colleges get warned.</p>
+      <span class="go">Report a scam →</span>
+    </a>
+    <a class="feature" href="/tools">
+      <span class="icon" aria-hidden="true">🧩</span>
+      <h3>Use it in your browser or Telegram</h3>
+      <p>Browser extension with Gmail warnings, a one-click bookmark for any site, and a Telegram bot.</p>
+      <span class="go">Get the tools →</span>
+    </a>
+    <a class="feature officer" href="/dashboard">
+      <span class="icon" aria-hidden="true">🎓</span>
+      <h3>Placement cell dashboard</h3>
+      <p>For placement officers: review student reports and see verified scams across colleges.</p>
+      <span class="go">Officer login →</span>
+    </a>
+  </div>
+
+  <h2 class="section-title">How it works</h2>
+  <div class="how">
+    <div><h3>Paste or upload</h3><p class="muted">A message, a whole chat, or an offer letter PDF.</p></div>
+    <div><h3>We check for scam signs</h3><p class="muted">Fake recruiters, fee demands, lookalike websites, forged documents and known scammers reported by other colleges.</p></div>
+    <div><h3>You get a clear answer</h3><p class="muted">A risk score from 0 to 100, the reasons, and exactly what to do next.</p></div>
+  </div>
+
+  <h2 class="section-title">Red flags to remember</h2>
+  <div class="tips">
+    <details class="tip"><summary>💸 They ask you to pay</summary>
+      <p>Registration fee, "refundable" deposit, training kit, laptop charges, verification fee. Real employers never charge candidates.</p></details>
+    <details class="tip"><summary>📧 Gmail or Yahoo "HR"</summary>
+      <p>Big companies email from their own domain (like @infosys.com), never Gmail. Watch for lookalikes like infosys-careers.co.</p></details>
+    <details class="tip"><summary>👍 "Like videos, earn ₹3000/day"</summary>
+      <p>Task scams pay you a little first to build trust, then ask for a "VIP task" deposit you never get back.</p></details>
+    <details class="tip"><summary>⏰ Pressure to act fast</summary>
+      <p>"Pay within 24 hours or lose your seat" is a pressure tactic. Real offers give you time.</p></details>
+    <details class="tip"><summary>🪪 Aadhaar, PAN or OTP over chat</summary>
+      <p>Never send identity documents or OTPs on WhatsApp. Real companies collect documents on their official portal after you join.</p></details>
+    <details class="tip"><summary>📱 "Let's continue on Telegram"</summary>
+      <p>Moving you to Telegram or WhatsApp lets scammers avoid the job portal's checks.</p></details>
+  </div>
+</main>
+<script src="/static/js/common.js"></script>
+<script>
+  // Quick check: hand the text to the message page in the URL fragment (never sent to the server).
+  document.getElementById("quick").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = document.getElementById("quickText").value.trim();
+    if (!text) { JSS.toast("Paste a message first, or pick an option below."); return; }
+    location.href = "/check#text=" + encodeURIComponent(text.slice(0, 6000));
+  });
+  // Older bookmarklets opened "/#text=…": forward them to the message page.
+  if (location.hash.startsWith("#text=")) location.replace("/check" + location.hash);
+</script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+[
+  {
+    "id": "fee-internship-email",
+    "scenario": "Fake internship email asking a registration fee",
+    "expected": "high",
+    "sender_email": "careers.wipro.hr@gmail.com",
+    "claimed_company": "Wipro",
+    "text": "Dear Candidate,\n\nCongratulations! Based on your resume you have been shortlisted for the Data Analyst Internship at Wipro (6 months, stipend Rs 25,000/month).\n\nTo confirm your seat, you must pay a one-time registration fee of Rs 1,499 (fully refundable after joining) to wiprohr.desk@ybl within 24 hours. Limited seats available.\n\nRegards,\nHR Team, Wipro"
+  },
+  {
+    "id": "youtube-like-task",
+    "scenario": "WhatsApp 'like YouTube videos' task scam",
+    "expected": "high",
+    "sender_email": null,
+    "claimed_company": null,
+    "text": "Hello! I am Priya from DigitalBoost Marketing. We are hiring for a part time job. Simple work: liking YouTube videos and sending screenshots. Earn Rs 150 per task, up to Rs 5000 per day! Work from home, 10 minutes daily. Interested? Join our Telegram group to start: https://t.me/digiboost_tasks_official"
+  },
+  {
+    "id": "prepaid-task-chat",
+    "scenario": "Telegram prepaid/VIP task scam after trust is built",
+    "expected": "high",
+    "sender_email": null,
+    "claimed_company": null,
+    "text": "Mentor Anjali: Congrats! You completed 3 free tasks and received Rs 450 in your account.\nMentor Anjali: Now you are eligible for VIP tasks with 30% daily income.\nMentor Anjali: Deposit Rs 2,000 for the merchant task and you will get Rs 2,600 back within 30 minutes.\nMentor Anjali: Pay here: upi://pay?pa=vipmerchant77@axl&am=2000\nMentor Anjali: Hurry, the slot closes in 15 minutes."
+  },
+  {
+    "id": "lookalike-offer-letter",
+    "scenario": "Offer from a lookalike TCS domain asking a laptop deposit",
+    "expected": "high",
+    "sender_email": "onboarding@tcs-careers.in",
+    "claimed_company": "TCS",
+    "text": "Dear Applicant,\n\nWe are pleased to offer you the position of Assistant System Engineer at Tata Consultancy Services with CTC 7.2 LPA. Your joining date is 15th next month.\n\nBefore joining, you must pay a laptop security deposit of Rs 8,500 (refundable with first salary). Transfer to:\nAccount Name: TCS Onboarding Services\nAccount No: 50200078123456\nIFSC: HDFC0001234\n\nFailing to pay within 48 hours will cancel your offer."
+  },
+  {
+    "id": "verification-fee-gmail",
+    "scenario": "Gmail 'HR' claiming Accenture asking a background verification fee",
+    "expected": "high",
+    "sender_email": "accenture.recruitment.india@gmail.com",
+    "claimed_company": "Accenture",
+    "text": "Hi,\n\nYou have cleared the HR interview for Associate Software Engineer at Accenture. Please complete your background verification. A background verification fee of Rs 3,200 is required to process your documents. Pay via https://rzp.io/l/acc-bgv-2026 and reply with the screenshot.\n\nThanks,\nRecruitment Team"
+  },
+  {
+    "id": "govt-internship-form",
+    "scenario": "Fake government (MSME) internship via shortened link",
+    "expected": "high",
+    "sender_email": null,
+    "claimed_company": null,
+    "text": "PM Internship Scheme 2026 - Ministry of MSME. Paid internship for all graduates, stipend Rs 15,000/month. Apply now: https://bit.ly/pm-intern-apply\nApplication processing fee: Rs 299 only. Last date is today!"
+  },
+  {
+    "id": "hinglish-fee",
+    "scenario": "Hinglish WhatsApp message demanding fees",
+    "expected": "high",
+    "sender_email": null,
+    "claimed_company": null,
+    "text": "Hello sir, aapka selection ho gaya hai Amazon warehouse job ke liye. Salary 28,000 per month. Joining ke liye 1500 rupees fees bharni hogi, ID card aur uniform ke liye. Payment iss number pe karo: 9876543210@paytm. Aaj hi karna hai, kal seat chali jayegi."
+  },
+  {
+    "id": "document-phishing",
+    "scenario": "Fake recruiter collecting Aadhaar/PAN with no payment asked (identity theft)",
+    "expected": "high",
+    "sender_email": "talent@lnfosys.com",
+    "claimed_company": "Infosys",
+    "text": "Dear Candidate,\n\nYou are selected for the Infosys Off-Campus Hiring Drive. To generate your offer letter, please send the following on WhatsApp within 2 hours: Aadhaar card (front and back), PAN card, bank passbook, and a selfie holding your Aadhaar.\n\nWhatsApp HR: https://wa.me/919876543210"
+  },
+  {
+    "id": "hotel-rating-task",
+    "scenario": "'Rate hotels on Google' task scam",
+    "expected": "high",
+    "sender_email": null,
+    "claimed_company": null,
+    "text": "Hi, we found your profile on Naukri. We need online reviewers. Just rate hotels on Google Maps and earn Rs 3,000 per day. No experience needed. Contact our HR on Telegram: t.me/hotelreview_hr"
+  },
+  {
+    "id": "genuine-infosys-interview",
+    "scenario": "GENUINE: interview invite from the official domain",
+    "expected": "low",
+    "sender_email": "campus.recruitment@infosys.com",
+    "claimed_company": "Infosys",
+    "text": "Dear Candidate,\n\nThank you for applying to Infosys. Your technical interview for the Systems Engineer role is scheduled on 14 October at 10:30 AM on Microsoft Teams. The meeting link will be shared one day before.\n\nPlease keep your college ID ready.\n\nRegards,\nInfosys Campus Recruitment"
+  },
+  {
+    "id": "genuine-internship-platform",
+    "scenario": "GENUINE: internship application update from a hiring platform",
+    "expected": "low",
+    "sender_email": "no-reply@internshala.com",
+    "claimed_company": null,
+    "text": "Hi, your application for the Web Development internship at a Bengaluru startup has been shortlisted. The employer will contact you for an assignment. Stipend: Rs 10,000/month. Duration: 3 months."
+  },
+  {
+    "id": "genuine-no-fee-disclaimer",
+    "scenario": "GENUINE (tricky): real offer that warns 'we never charge any fee'",
+    "expected": "low",
+    "sender_email": "careers@tcs.com",
+    "claimed_company": "TCS",
+    "text": "Dear Candidate,\n\nCongratulations on your selection as Assistant System Engineer at TCS. Your offer letter is available on the TCS NextStep portal.\n\nImportant: TCS never asks candidates to pay any registration fee, security deposit or training fee at any stage of recruitment. If anyone asks you for money, report it immediately."
+  }
+]

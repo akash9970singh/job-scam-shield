@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Job Scam Shield</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="icons/icon48.png" alt="" width="24" height="24">
+    <h1>Job Scam Shield</h1>
+  </header>
+
+  <label for="text">Message, email or chat</label>
+  <textarea id="text" placeholder="Paste a job offer, or select text on the page before opening this popup."></textarea>
+  <div class="buttons">
+    <button id="checkText" type="button">Check text</button>
+    <button id="checkPage" type="button" class="secondary">Check whole page</button>
+  </div>
+  <p class="hint">Tip: select text on any site, right-click → <b>Check for job scam</b>.</p>
+
+  <div id="result" aria-live="polite"></div>
+
+  <details id="settings">
+    <summary>Settings</summary>
+    <label class="check"><input id="gmailAutoScan" type="checkbox">
+      Scan emails I open in Gmail (sends them to the server below)</label>
+    <label for="serverUrl">Server address</label>
+    <input id="serverUrl" type="url" placeholder="http://127.0.0.1:8000">
+    <button id="save" type="button" class="secondary">Save settings</button>
+    <p id="saved" class="hint"></p>
+  </details>
+
+  <script src="render.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

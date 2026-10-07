@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Placement Cell Dashboard</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    :root { --bg: #f6f7f9; --card: #fff; --text: #1d2330; --muted: #5b6475; --border: #dde1e8;
+            --accent: #2457d6; --bar: #2457d6; --high: #c62828; --medium: #b26a00; --low: #2e7d32;
+            --chip: #eef1f6; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #12151b; --card: #1b1f27; --text: #e6e9ef; --muted: #9aa3b5; --border: #2c323d;
+              --accent: #6d95ff; --bar: #6d95ff; --high: #ff6b6b; --medium: #ffb54d; --low: #66c66b;
+              --chip: #252b36; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 14px/1.5 system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    main { max-width: 1040px; margin: 0 auto; padding: 20px 16px 48px; }
+    h1 { font-size: 22px; margin: 0; }
+    .muted { color: var(--muted); }
+    a { color: var(--accent); }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+    .hidden { display: none !important; }
+    label { display: block; font-weight: 600; margin: 10px 0 4px; }
+    input, select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
+                    background: var(--bg); color: var(--text); font: inherit; }
+    button { padding: 8px 14px; border: 0; border-radius: 6px; background: var(--accent); color: #fff;
+             font: inherit; font-weight: 600; cursor: pointer; }
+    button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--border); }
+    button.verify { background: var(--low); } button.reject { background: transparent; color: var(--high); border: 1px solid var(--border); }
+    button:disabled { opacity: .6; cursor: wait; }
+    #login { max-width: 380px; margin: 60px auto; }
+    .dash-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .dash-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+    .dash-tabs button { background: transparent; color: var(--text); border: 1px solid var(--border); font-weight: 500; }
+    .dash-tabs button[aria-selected="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .count { display: inline-block; min-width: 20px; padding: 0 6px; border-radius: 10px; background: var(--high);
+             color: #fff; font-size: 12px; text-align: center; margin-left: 4px; }
+    .scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+    td.value { font-family: ui-monospace, Consolas, monospace; overflow-wrap: anywhere; min-width: 160px; }
+    .chip { display: inline-block; padding: 1px 8px; border-radius: 10px; background: var(--chip); font-size: 12px; white-space: nowrap; }
+    .status-verified { color: var(--low); font-weight: 600; } .status-rejected { color: var(--muted); }
+    .status-pending { color: var(--medium); font-weight: 600; }
+    .actions { display: flex; gap: 6px; white-space: nowrap; }
+    .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .tile .num { font-size: 30px; font-weight: 700; }
+    .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+    .bars { list-style: none; padding: 0; margin: 8px 0 0; }
+    .bars li { display: grid; grid-template-columns: 140px 1fr 36px; gap: 8px; align-items: center; padding: 5px 0; }
+    .track { height: 12px; }
+    .bar { height: 12px; background: var(--bar); border-radius: 0 4px 4px 0; min-width: 2px; }
+    .bars li:hover .bar { filter: brightness(1.15); }
+    .bars .n { text-align: right; font-variant-numeric: tabular-nums; }
+    #tip { position: fixed; pointer-events: none; background: var(--text); color: var(--bg); padding: 4px 8px;
+           border-radius: 4px; font-size: 12px; z-index: 10; }
+    .empty { padding: 24px; text-align: center; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; justify-content: space-between; margin-bottom: 10px; }
+    .toolbar select { width: auto; }
+    #toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg);
+             padding: 8px 14px; border-radius: 6px; }
+    .error { color: var(--high); }
+  </style>
+</head>
+<body>
+<main>
+  <section id="login" class="card hidden">
+    <h1>Placement Cell Dashboard</h1>
+    <p class="muted">Review scam reports from your students and see verified scams across the college network.</p>
+    <form id="loginForm">
+      <label for="email">Email</label><input id="email" type="email" autocomplete="username" required>
+      <label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required>
+      <p id="loginError" class="error" role="alert"></p>
+      <button type="submit">Log in</button>
+    </form>
+    <p class="muted">Accounts are created by the network admin. <a href="/">Back to the home page</a></p>
+  </section>
+
+  <section id="app" class="hidden">
+    <div class="dash-head">
+      <div><h1>Placement Cell Dashboard</h1><div id="who" class="muted"></div></div>
+      <button id="logout" class="ghost" type="button">Log out</button>
+    </div>
+    <nav class="dash-tabs" role="tablist" aria-label="Dashboard sections">
+      <button role="tab" data-tab="pending" aria-selected="true">Pending reviews <span id="pendingCount" class="count hidden"></span></button>
+      <button role="tab" data-tab="all" aria-selected="false">All reports</button>
+      <button role="tab" data-tab="stats" aria-selected="false">Statistics</button>
+      <button role="tab" data-tab="feed" aria-selected="false">Network feed</button>
+    </nav>
+
+    <div id="tab-pending" class="card">
+      <p class="muted">Verify a report only when you're confident it's a scam: verified identifiers warn students at
+        every college. A notes column is visible only to your college.</p>
+      <div class="scroll"><table id="pendingTable"></table></div>
+    </div>
+
+    <div id="tab-all" class="card hidden">
+      <div class="toolbar">
+        <strong>Reports</strong>
+        <label class="muted" style="margin:0">Status
+          <select id="statusFilter"><option value="all">All</option><option>pending</option><option>verified</option><option>rejected</option></select></label>
+      </div>
+      <div class="scroll"><table id="allTable"></table></div>
+    </div>
+
+    <div id="tab-stats" class="hidden">
+      <div id="tiles" class="tiles"></div>
+      <div class="charts">
+        <div class="card"><strong>Reports by scam type</strong><div class="muted">Pending + verified</div><ul id="byType" class="bars"></ul></div>
+        <div class="card"><strong>Reports by identifier</strong><div class="muted">Pending + verified</div><ul id="byKind" class="bars"></ul></div>
+      </div>
+    </div>
+
+    <div id="tab-feed" class="card hidden">
+      <div class="toolbar">
+        <div><strong>Verified across the network</strong>
+          <div class="muted">Shared with every college. Notes are never shared, only the identifier.</div></div>
+        <button id="csv" class="ghost" type="button">Download CSV</button>
+      </div>
+      <div class="scroll"><table id="feedTable"></table></div>
+    </div>
+  </section>
+</main>
+<div id="tip" class="hidden" role="tooltip"></div>
+<div id="toast" class="hidden" role="status"></div>
+<script src="/static/js/common.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const TYPES = { fee_demand: "Fee demand", task_scam: "Task scam", fake_offer_letter: "Fake offer letter",
+                  identity_theft: "Identity theft", fake_recruiter: "Fake recruiter", other: "Other" };
+  const KINDS = { upi: "UPI ID", phone: "Phone", domain: "Website", email: "Email" };
+  const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "—";
+
+  // The session token lives in sessionStorage: it survives reloads but not closing the tab.
+  const store = {
+    get() { try { return sessionStorage.getItem("jssToken"); } catch { return null; } },
+    set(t) { try { t ? sessionStorage.setItem("jssToken", t) : sessionStorage.removeItem("jssToken"); } catch {} },
+  };
+  let token = store.get();
+
+  async function api(path, options = {}) {
+    const res = await fetch(path, { ...options, headers: { "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(options.headers || {}) } });
+    if (res.status === 401) { showLogin(); throw new Error("Please log in again."); }
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(typeof data.detail === "string" ? data.detail : `Request failed (${res.status})`);
+    }
+    return res.status === 204 ? null : (res.headers.get("content-type") || "").includes("json") ? res.json() : res.text();
+  }
+
+  function toast(message) {
+    $("toast").textContent = message; $("toast").classList.remove("hidden");
+    clearTimeout(toast.t); toast.t = setTimeout(() => $("toast").classList.add("hidden"), 2500);
+  }
+
+  function showLogin() {
+    token = null; store.set(null);
+    $("app").classList.add("hidden"); $("login").classList.remove("hidden");
+  }
+
+  let isAdmin = false;
+  async function showApp() {
+    const me = await api("/api/auth/me");
+    isAdmin = me.role === "admin";
+    $("who").textContent = `${me.name} · ${me.college || "All colleges (admin)"}`;
+    $("login").classList.add("hidden"); $("app").classList.remove("hidden");
+    selectTab("pending");
+  }
+
+  $("loginForm").onsubmit = async (e) => {
+    e.preventDefault();
+    $("loginError").textContent = "";
+    try {
+      const data = await api("/api/auth/login", { method: "POST",
+        body: JSON.stringify({ email: $("email").value, password: $("password").value }) });
+      token = data.token; store.set(token); $("password").value = "";
+      await showApp();
+    } catch (err) { $("loginError").textContent = err.message; }
+  };
+
+  $("logout").onclick = async () => {
+    try { await api("/api/auth/logout", { method: "POST" }); } catch {}
+    showLogin();
+  };
+
+  // ---------- tabs ----------
+  const loaders = { pending: loadPending, all: loadAll, stats: loadStats, feed: loadFeed };
+  function selectTab(name) {
+    document.querySelectorAll(".dash-tabs [role=tab]").forEach((b) => b.setAttribute("aria-selected", b.dataset.tab === name));
+    Object.keys(loaders).forEach((t) => $(`tab-${t}`).classList.toggle("hidden", t !== name));
+    loaders[name]().catch((err) => toast(err.message));
+  }
+  document.querySelectorAll(".dash-tabs [role=tab]").forEach((b) => (b.onclick = () => selectTab(b.dataset.tab)));
+  $("statusFilter").onchange = () => loadAll().catch((err) => toast(err.message));
+
+  // ---------- reports ----------
+  function networkHint(r) {
+    if (!r.network_verified) return '<span class="muted">New</span>';
+    return `<span class="chip">Verified at ${r.network_colleges} college(s)</span>`;
+  }
+
+  function reportRows(reports, { actions, statusCol, collegeCol }) {
+    if (!reports.length) return `<tr><td class="empty muted">Nothing here.</td></tr>`;
+    const head = `<tr><th>Identifier</th><th>Scam type</th><th>Note</th>${collegeCol ? "<th>College</th>" : ""}
+      <th>Reported</th><th>Network</th>${statusCol ? "<th>Status</th>" : ""}${actions ? "<th></th>" : ""}</tr>`;
+    return head + reports.map((r) => `<tr data-id="${r.id}">
+      <td class="value"><span class="chip">${KINDS[r.kind]}</span> ${esc(r.value)}</td>
+      <td>${esc(TYPES[r.scam_type] || r.scam_type)}</td>
+      <td>${esc(r.note || "")}</td>
+      ${collegeCol ? `<td>${esc(r.college || "None given")}</td>` : ""}
+      <td>${fmtDate(r.created_at)}</td>
+      <td>${networkHint(r)}</td>
+      ${statusCol ? `<td class="status-${r.status}">${r.status}</td>` : ""}
+      ${actions ? `<td><div class="actions"><button class="verify" data-decision="verified">Verify</button>
+        <button class="reject" data-decision="rejected">Reject</button></div></td>` : ""}
+    </tr>`).join("");
+  }
+
+  async function loadPending() {
+    const reports = await api("/api/officer/reports?state=pending");
+    $("pendingTable").innerHTML = reportRows(reports, { actions: true, collegeCol: isAdmin });
+    $("pendingCount").textContent = reports.length;
+    $("pendingCount").classList.toggle("hidden", !reports.length);
+  }
+
+  async function loadAll() {
+    const state = $("statusFilter").value;
+    const reports = await api(`/api/officer/reports?state=${state || "all"}`);
+    $("allTable").innerHTML = reportRows(reports, { statusCol: true, collegeCol: isAdmin });
+  }
+
+  $("pendingTable").onclick = async (e) => {
+    const button = e.target.closest("button[data-decision]");
+    if (!button) return;
+    const row = button.closest("tr");
+    row.querySelectorAll("button").forEach((b) => (b.disabled = true));
+    try {
+      await api(`/api/officer/reports/${row.dataset.id}/review`, { method: "POST",
+        body: JSON.stringify({ decision: button.dataset.decision }) });
+      toast(button.dataset.decision === "verified" ? "Verified: students everywhere will now be warned." : "Rejected.");
+      await loadPending();
+    } catch (err) {
+      toast(err.message); row.querySelectorAll("button").forEach((b) => (b.disabled = false));
+    }
+  };
+
+  // ---------- statistics ----------
+  function bars(el, items, labels) {
+    if (!items.length) { el.innerHTML = '<li class="muted">No reports yet.</li>'; return; }
+    const max = Math.max(...items.map((i) => i.count));
+    el.innerHTML = items.map((i) => `<li data-tip="${esc(labels[i.label] || i.label)}: ${i.count} report(s)">
+      <span>${esc(labels[i.label] || i.label)}</span>
+      <span class="track"><span class="bar" style="display:block;width:${(i.count / max) * 100}%"></span></span>
+      <span class="n">${i.count}</span></li>`).join("");
+  }
+
+  async function loadStats() {
+    const s = await api("/api/officer/stats");
+    const tile = (label, value, note) => `<div class="card tile"><div class="muted">${label}</div>
+      <div class="num">${value}</div>${note ? `<div class="muted">${note}</div>` : ""}</div>`;
+    $("tiles").innerHTML = tile("Waiting for review", s.pending) + tile("Verified scams", s.verified, esc(s.scope))
+      + tile("Verified in last 30 days", s.verified_last_30_days) + tile("Rejected", s.rejected, "False or mistaken reports");
+    bars($("byType"), s.by_scam_type, TYPES);
+    bars($("byKind"), s.by_kind, KINDS);
+  }
+
+  // Hover tooltip for bars
+  document.addEventListener("mousemove", (e) => {
+    const li = e.target.closest?.("[data-tip]");
+    if (!li) { $("tip").classList.add("hidden"); return; }
+    $("tip").textContent = li.dataset.tip;
+    $("tip").style.left = `${e.clientX + 12}px`; $("tip").style.top = `${e.clientY + 12}px`;
+    $("tip").classList.remove("hidden");
+  });
+
+  // ---------- network feed ----------
+  async function loadFeed() {
+    const feed = await api("/api/network/feed");
+    $("feedTable").innerHTML = !feed.length ? `<tr><td class="empty muted">No verified scams yet.</td></tr>`
+      : `<tr><th>Identifier</th><th>Scam types</th><th>Colleges</th><th>Reports</th><th>Last verified</th></tr>`
+        + feed.map((f) => `<tr><td class="value"><span class="chip">${KINDS[f.kind]}</span> ${esc(f.value)}</td>
+          <td>${f.scam_types.map((t) => esc(TYPES[t] || t)).join(", ")}</td>
+          <td>${f.colleges}</td><td>${f.verified_reports}</td><td>${fmtDate(f.last_verified)}</td></tr>`).join("");
+  }
+
+  $("csv").onclick = async () => {
+    try {
+      const text = await api("/api/network/feed.csv");
+      const url = URL.createObjectURL(new Blob([text], { type: "text/csv" }));
+      const a = Object.assign(document.createElement("a"), { href: url, download: "scam-feed.csv" });
+      a.click(); URL.revokeObjectURL(url);
+    } catch (err) { toast(err.message); }
+  };
+
+  (token ? showApp().catch(showLogin) : Promise.resolve(showLogin()));
+</script>
+</body>
+</html>

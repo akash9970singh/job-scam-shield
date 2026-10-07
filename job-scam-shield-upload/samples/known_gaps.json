@@ -1,0 +1,90 @@
+[
+  {
+    "id": "devanagari-hindi",
+    "scenario": "Scam written in Hindi script, not Hinglish",
+    "expected": "high",
+    "sender_email": null,
+    "claimed_company": null,
+    "text": "बधाई हो! आपका चयन डेटा एंट्री नौकरी के लिए हो गया है। वेतन ₹25,000 प्रति माह। जॉइनिंग के लिए ₹999 पंजीकरण शुल्क आज ही जमा करें।"
+  },
+  {
+    "id": "obfuscated-words",
+    "scenario": "Scammer breaks up keywords and writes the amount in words",
+    "expected": "high",
+    "sender_email": null,
+    "claimed_company": null,
+    "text": "You are selected for the internship. Kindly pay the r.e.g.i.s.t.r.a.t.i.o.n f-e-e of five hundred rupees to hr desk @ ybl to lock your seat."
+  },
+  {
+    "id": "course-purchase",
+    "scenario": "Fee disguised as a 'mandatory certification course'",
+    "expected": "high",
+    "sender_email": "hr@brightpathtechsolutions.in",
+    "claimed_company": null,
+    "text": "Dear Candidate, you have been selected as a Junior Python Developer. Before joining, every new hire must complete our mandatory certification course (Rs 4,999). Enroll at brightpathtechsolutions.in/enroll. The course cost is adjusted in your first salary."
+  },
+  {
+    "id": "gift-card-payment",
+    "scenario": "Asks payment as Amazon gift cards instead of UPI",
+    "expected": "high",
+    "sender_email": null,
+    "claimed_company": null,
+    "text": "Congratulations on your selection for the remote customer support job. To activate your work account, buy two Amazon gift cards worth 2000 each and send the codes to your manager on this chat."
+  },
+  {
+    "id": "crypto-task",
+    "scenario": "Task scam that pays and collects in crypto (USDT)",
+    "expected": "high",
+    "sender_email": null,
+    "claimed_company": null,
+    "text": "Hi, online part-time opportunity. Complete simple product optimisation orders and earn commission in USDT. First top up 50 USDT to your work wallet to unlock the order queue. Wallet: TQ7x9fakeWalletAddr1234567890abcd"
+  },
+  {
+    "id": "money-mule",
+    "scenario": "Money-mule 'payment agent' job (no fee asked, crime instead)",
+    "expected": "high",
+    "sender_email": null,
+    "claimed_company": null,
+    "text": "Work from home as a Payment Processing Agent. You will receive customer payments in your own bank account and transfer them to our company account the same day. You keep 10% commission on every transaction. Students welcome."
+  },
+  {
+    "id": "fake-cheque-overpayment",
+    "scenario": "Fake cheque / overpayment for 'equipment'",
+    "expected": "high",
+    "sender_email": "office.manager.hiring@outlook.com",
+    "claimed_company": null,
+    "text": "Welcome aboard as our remote assistant! We will send you a cheque of 85,000 to buy your work equipment from our approved vendor. Deposit it, keep 10,000 as your first salary and send the remaining amount to the vendor."
+  },
+  {
+    "id": "remote-access-apk",
+    "scenario": "Asks to install a screen-sharing app or APK for 'onboarding'",
+    "expected": "high",
+    "sender_email": null,
+    "claimed_company": null,
+    "text": "Your interview is cleared. For onboarding, install AnyDesk and share the 9-digit code with our IT team, then install our HR app from this file: HR_Onboarding.apk. Keep your bank app open for salary account verification."
+  },
+  {
+    "id": "clean-first-message",
+    "scenario": "Opening message is harmless; the payment ask comes days later",
+    "expected": "medium",
+    "sender_email": null,
+    "claimed_company": null,
+    "text": "Hi, I am Neha, HR at a digital marketing agency. We saw your profile and have a flexible part-time role, 1-2 hours a day. Can I share the details?"
+  },
+  {
+    "id": "spoofed-real-domain",
+    "scenario": "Spoofed or hacked real company email asking for documents",
+    "expected": "high",
+    "sender_email": "hr@infosys.com",
+    "claimed_company": "Infosys",
+    "text": "Dear Candidate, your offer is ready. Please send your Aadhaar and PAN on this email today so we can release your offer letter."
+  },
+  {
+    "id": "unknown-company-no-fee-words",
+    "scenario": "Unknown company, real-looking domain, pay via 'starter kit' purchase",
+    "expected": "high",
+    "sender_email": "careers@nexorahiring.com",
+    "claimed_company": null,
+    "text": "Congratulations! You are hired as a Sales Executive. Please purchase your starter kit from our store (link below) before Monday so we can ship your welcome package. Price 2,499. Store: nexorahiring.com/store"
+  }
+]

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Browser and Telegram Tools · Job Scam Shield</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<main class="container narrow">
+  <div class="page-head">
+    <a class="back" href="/">← All tools</a>
+    <h1>🧩 Use it where you read job offers</h1>
+    <p>Check messages without copying them here: on any website, inside Gmail, or straight from Telegram.</p>
+  </div>
+
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+    <a class="feature" href="#bookmark"><span class="icon">🔖</span><h3>One-click bookmark</h3>
+      <p>Any browser, any site, nothing to install.</p><span class="go">30 seconds →</span></a>
+    <a class="feature" href="#extension"><span class="icon">🧩</span><h3>Browser extension</h3>
+      <p>Right-click any text, plus warnings inside Gmail.</p><span class="go">2 minutes →</span></a>
+    <a class="feature" href="#telegram"><span class="icon">✈️</span><h3>Telegram bot</h3>
+      <p>Forward suspicious messages or send an offer letter.</p><span class="go">Set up →</span></a>
+  </div>
+
+  <section class="card" id="bookmark" style="margin-top:24px">
+    <h2>🔖 One-click bookmark</h2>
+    <p class="muted">Works in Chrome, Brave, Edge, Firefox, Safari and Opera.</p>
+    <ol class="steps-list">
+      <li>Show your bookmarks bar: <strong>Ctrl+Shift+B</strong> (⌘+Shift+B on Mac).</li>
+      <li>Drag this button onto the bookmarks bar:<br>
+        <a id="bookmarklet" class="btn btn-primary bookmarklet" href="#" style="margin:8px 0">🛡️ Check for job scam</a></li>
+      <li>On LinkedIn, WhatsApp Web, Gmail or a job site, <strong>select the message</strong> and click the bookmark.
+        Select nothing to check the whole page.</li>
+    </ol>
+    <p class="small muted">The text is passed in the part of the link after <code>#</code>, which browsers never send to any server.</p>
+  </section>
+
+  <section class="card" id="extension">
+    <h2>🧩 Browser extension</h2>
+    <p class="muted">Adds <strong>right-click → Check for job scam</strong> on every site, a toolbar button,
+      and optional warning banners on suspicious Gmail emails.</p>
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="chromium">Chrome · Brave · Edge · Opera</button>
+      <button role="tab" aria-selected="false" data-tab="firefox">Firefox</button>
+    </div>
+    <div data-panel="chromium"><ol class="steps-list">
+      <li>Open the extensions page: <code>chrome://extensions</code>, <code>brave://extensions</code> or <code>edge://extensions</code>.</li>
+      <li>Turn on <strong>Developer mode</strong>.</li>
+      <li>Click <strong>Load unpacked</strong> and choose the <code>extension</code> folder of this project.</li>
+      <li>Pin <strong>Job Scam Shield</strong> from the puzzle-piece menu.</li>
+      <li>For Gmail warnings: click the extension → <strong>Settings</strong> → tick <em>Scan emails I open in Gmail</em>.</li></ol></div>
+    <div data-panel="firefox" class="hidden"><ol class="steps-list">
+      <li>Open <code>about:debugging#/runtime/this-firefox</code>.</li>
+      <li>Click <strong>Load Temporary Add-on</strong> and choose <code>extension/manifest.json</code>.</li>
+      <li>Firefox removes it when it restarts. To keep it, sign it for free as an unlisted add-on on addons.mozilla.org.</li></ol></div>
+    <p class="small muted">The extension talks to this server, so keep it running.</p>
+  </section>
+
+  <section class="card" id="telegram">
+    <h2>✈️ Telegram bot</h2>
+    <p class="muted">Students can paste a message, forward a whole scam conversation and send <code>/check</code>,
+      or send a WhatsApp export or an offer letter PDF.</p>
+    <ol class="steps-list">
+      <li>On Telegram, message <strong>@BotFather</strong> → <code>/newbot</code> → choose a name. Copy the token (keep it secret).</li>
+      <li>In the project folder, copy <code>.env.example</code> to <code>.env</code> and set
+        <code>TELEGRAM_BOT_TOKEN=</code> your token. Never upload <code>.env</code>.</li>
+      <li>Run the bot (keep the window open):<br>
+        <code>.\.venv\Scripts\python.exe -m app.bot</code>
+        <button type="button" class="chip" id="copyBot" style="margin-left:6px">Copy command</button></li>
+      <li>Open your bot in Telegram and send <code>/start</code>. The <strong>/</strong> menu shows the commands.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>👩‍💻 For developers</h2>
+    <p class="muted">Everything on this site is a JSON API. Interactive docs: <a href="/docs">/docs</a>.</p>
+  </section>
+</main>
+<script src="/static/js/common.js"></script>
+<script>
+  const MAX = 6000;
+  const link = document.getElementById("bookmarklet");
+  link.href = "javascript:(()=>{let t=String(getSelection()).trim()||document.body.innerText;"
+    + `window.open(${JSON.stringify(location.origin + "/check#text=")}+encodeURIComponent(t.slice(0,${MAX})),'_blank')})()`;
+  link.addEventListener("click", (e) => { e.preventDefault(); JSS.toast("Drag this button to your bookmarks bar, then click it on any website."); });
+
+  document.querySelectorAll("[role=tab]").forEach((tab) => tab.addEventListener("click", () => {
+    document.querySelectorAll("[role=tab]").forEach((t) => t.setAttribute("aria-selected", t === tab));
+    document.querySelectorAll("[data-panel]").forEach((p) => p.classList.toggle("hidden", p.dataset.panel !== tab.dataset.tab));
+  }));
+  if (/firefox/i.test(navigator.userAgent)) document.querySelector('[data-tab="firefox"]').click();
+
+  document.getElementById("copyBot").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(".\\.venv\\Scripts\\python.exe -m app.bot");
+      JSS.toast("Copied. Paste it in PowerShell in the project folder.");
+    } catch { JSS.toast("Couldn't copy. Select the command and copy it manually."); }
+  });
+</script>
+</body>
+</html>

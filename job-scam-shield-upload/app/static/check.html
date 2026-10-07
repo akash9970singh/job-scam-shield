@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Check a Message · Job Scam Shield</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<main class="container narrow">
+  <div class="page-head">
+    <a class="back" href="/">← All tools</a>
+    <h1>💬 Check a message or email</h1>
+    <p>Paste a job offer from email, SMS, LinkedIn or a job site. We check who sent it, whether it asks
+      for money or documents, and whether it matches known scam patterns.</p>
+  </div>
+
+  <form id="form" class="card">
+    <div class="label" style="margin-top:0">Not sure what to paste? Try an example:</div>
+    <div class="chips" id="examples">
+      <button type="button" class="chip" data-example="fee">💸 Fee scam email</button>
+      <button type="button" class="chip" data-example="task">👍 Task scam</button>
+      <button type="button" class="chip" data-example="docs">🪪 Document request</button>
+      <button type="button" class="chip" data-example="genuine">✅ Genuine interview</button>
+    </div>
+
+    <label for="text">The message</label>
+    <textarea id="text" maxlength="200000" placeholder="Paste the full message here, including any links, numbers or UPI IDs."></textarea>
+    <div class="field-foot"><span>Include everything: links, numbers and UPI IDs help the check.</span><span id="count">0 characters</span></div>
+
+    <div class="row">
+      <div><label for="sender">Sender's email <span class="hint">(optional)</span></label>
+        <input id="sender" type="email" placeholder="hr@company.com" autocomplete="off"></div>
+      <div><label for="company">Company they claim to be from <span class="hint">(optional)</span></label>
+        <input id="company" type="text" placeholder="e.g. Infosys, TCS, Wipro" list="companies" autocomplete="off">
+        <datalist id="companies"><option>TCS</option><option>Infosys</option><option>Wipro</option><option>HCLTech</option>
+          <option>Tech Mahindra</option><option>Accenture</option><option>Cognizant</option><option>Capgemini</option>
+          <option>IBM</option><option>Deloitte</option><option>Amazon</option><option>Google</option><option>Microsoft</option>
+          <option>Flipkart</option></datalist></div>
+    </div>
+
+    <details class="more">
+      <summary>Advanced options</summary>
+      <label class="switch"><input id="llm" type="checkbox">
+        <span>Also analyse with AI<br><span class="hint">Catches unusual wording. Sends the text to Anthropic's Claude API, so only use it if you're comfortable with that.</span></span></label>
+    </details>
+
+    <div class="actions">
+      <button class="btn btn-primary btn-lg" id="go" type="submit">Check for scam</button>
+      <button class="btn btn-ghost" id="clear" type="button">Clear</button>
+    </div>
+  </form>
+
+  <div id="result"></div>
+</main>
+<script src="/static/js/common.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const EXAMPLES = {
+    fee: { sender: "careers.wipro.hr@gmail.com", company: "Wipro",
+      text: "Dear Candidate,\n\nCongratulations! You have been shortlisted for the Data Analyst Internship at Wipro (stipend Rs 25,000/month).\n\nTo confirm your seat, pay a one-time registration fee of Rs 1,499 (fully refundable after joining) to wiprohr.desk@ybl within 24 hours. Limited seats available.\n\nRegards,\nHR Team" },
+    task: { sender: "", company: "",
+      text: "Hello! I am Priya from DigitalBoost Marketing. We are hiring for a part time job. Simple work: liking YouTube videos and sending screenshots. Earn Rs 150 per task, up to Rs 5000 per day! Join our Telegram group to start: https://t.me/digiboost_tasks" },
+    docs: { sender: "talent@lnfosys.com", company: "Infosys",
+      text: "Dear Candidate, you are selected for the Infosys Off-Campus Hiring Drive. To generate your offer letter, send your Aadhaar card, PAN card, bank passbook and a selfie holding your Aadhaar on WhatsApp within 2 hours: https://wa.me/919000000002" },
+    genuine: { sender: "campus.recruitment@infosys.com", company: "Infosys",
+      text: "Dear Candidate, thank you for applying to Infosys. Your technical interview for the Systems Engineer role is scheduled on 14 October at 10:30 AM on Microsoft Teams. The meeting link will be shared one day before. Please keep your college ID ready." },
+  };
+
+  const updateCount = () => ($("count").textContent = `${$("text").value.length.toLocaleString()} characters`);
+  $("text").addEventListener("input", updateCount);
+
+  $("examples").addEventListener("click", (e) => {
+    const chip = e.target.closest("[data-example]");
+    if (!chip) return;
+    const ex = EXAMPLES[chip.dataset.example];
+    $("text").value = ex.text; $("sender").value = ex.sender; $("company").value = ex.company;
+    document.querySelectorAll("#examples .chip").forEach((c) => c.setAttribute("aria-pressed", c === chip));
+    updateCount();
+    $("result").innerHTML = "";
+  });
+
+  $("clear").addEventListener("click", () => {
+    ["text", "sender", "company"].forEach((id) => ($(id).value = ""));
+    document.querySelectorAll("#examples .chip").forEach((c) => c.setAttribute("aria-pressed", "false"));
+    $("result").innerHTML = ""; updateCount(); $("text").focus();
+  });
+
+  async function check() {
+    if (!$("text").value.trim() && !$("sender").value.trim()) {
+      JSS.toast("Paste a message (or at least the sender's email) first.");
+      $("text").focus();
+      return;
+    }
+    await JSS.busy($("go"), "Checking…", async () => {
+      try {
+        const { ok, status, data } = await JSS.api("/api/analyze", {
+          text: $("text").value, sender_email: $("sender").value.trim() || null,
+          claimed_company: $("company").value.trim() || null, use_llm: $("llm").checked,
+        });
+        if (!ok) { JSS.toast(JSS.errorText(data, status)); return; }
+        JSS.renderResult($("result"), data);
+      } catch (err) { JSS.toast(err.message); }
+    });
+  }
+  $("form").addEventListener("submit", (e) => { e.preventDefault(); check(); });
+
+  // Text arriving from the home page quick-check or the bookmarklet.
+  const shared = JSS.takeHashParams();
+  if (shared.text) { $("text").value = shared.text; updateCount(); check(); }
+  window.addEventListener("hashchange", () => {
+    const again = JSS.takeHashParams();
+    if (again.text) { $("text").value = again.text; updateCount(); check(); }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Report a Scammer · Job Scam Shield</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<main class="container narrow">
+  <div class="page-head">
+    <a class="back" href="/">← All tools</a>
+    <h1>🚩 Report a scammer</h1>
+    <p>Your college's placement officer reviews each report. Once it's verified, every student who checks a
+      message containing it, at any college in the network, gets warned.</p>
+  </div>
+
+  <form id="form" class="card" novalidate>
+    <div class="progress-dots" aria-hidden="true"><span class="on"></span><span></span><span></span></div>
+
+    <!-- Step 1 -->
+    <section data-step="1">
+      <h2>1. What are you reporting?</h2>
+      <div class="choice-grid" id="kinds">
+        <button type="button" class="choice" data-kind="upi" aria-pressed="true"><span class="emoji">💳</span><strong>UPI ID</strong><small>name@ybl, 98xxx@paytm</small></button>
+        <button type="button" class="choice" data-kind="phone" aria-pressed="false"><span class="emoji">📱</span><strong>Phone number</strong><small>WhatsApp or call</small></button>
+        <button type="button" class="choice" data-kind="domain" aria-pressed="false"><span class="emoji">🌐</span><strong>Website</strong><small>fake-hr-portal.in</small></button>
+        <button type="button" class="choice" data-kind="email" aria-pressed="false"><span class="emoji">📧</span><strong>Email address</strong><small>hr.desk@gmail.com</small></button>
+      </div>
+      <label for="value" id="valueLabel">The UPI ID</label>
+      <input id="value" type="text" autocomplete="off" placeholder="scammer@ybl">
+      <div class="lookup" id="lookup" aria-live="polite"></div>
+      <div class="actions"><button type="button" class="btn btn-primary" data-next>Next →</button></div>
+    </section>
+
+    <!-- Step 2 -->
+    <section data-step="2" class="hidden">
+      <h2>2. What kind of scam was it?</h2>
+      <div class="choice-grid" id="types">
+        <button type="button" class="choice" data-type="fee_demand" aria-pressed="false"><span class="emoji">💸</span><strong>Asked for a fee</strong><small>Registration, deposit, training kit</small></button>
+        <button type="button" class="choice" data-type="task_scam" aria-pressed="false"><span class="emoji">👍</span><strong>Task / part-time job</strong><small>Like videos, rate hotels, VIP tasks</small></button>
+        <button type="button" class="choice" data-type="fake_offer_letter" aria-pressed="false"><span class="emoji">📄</span><strong>Fake offer letter</strong><small>Forged letter or portal</small></button>
+        <button type="button" class="choice" data-type="fake_recruiter" aria-pressed="false"><span class="emoji">🕴️</span><strong>Fake recruiter / HR</strong><small>Pretending to be a company</small></button>
+        <button type="button" class="choice" data-type="identity_theft" aria-pressed="false"><span class="emoji">🪪</span><strong>Wanted my documents</strong><small>Aadhaar, PAN, OTP, bank</small></button>
+        <button type="button" class="choice" data-type="other" aria-pressed="false"><span class="emoji">❓</span><strong>Something else</strong><small>Tell us in the note</small></button>
+      </div>
+      <label for="note">What happened? <span class="hint">(optional, seen only by your college's placement officer)</span></label>
+      <textarea id="note" maxlength="500" style="min-height:90px" placeholder="e.g. Added me to a Telegram task group, paid Rs 150 first, then asked Rs 2,000 deposit. Don't include your own phone number or email."></textarea>
+      <div class="field-foot"><span></span><span id="noteCount">0 / 500</span></div>
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" data-back>← Back</button>
+        <button type="button" class="btn btn-primary" data-next>Next →</button>
+      </div>
+    </section>
+
+    <!-- Step 3 -->
+    <section data-step="3" class="hidden">
+      <h2>3. Your college</h2>
+      <p class="muted">Your report goes to this college's placement officer for review.</p>
+      <label for="college">College</label>
+      <select id="college"><option value="">Not listed / prefer not to say</option></select>
+      <div class="callout small" style="margin-top:16px" id="summary"></div>
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" data-back>← Back</button>
+        <button type="submit" class="btn btn-primary btn-lg" id="submit">Submit report</button>
+      </div>
+    </section>
+
+    <!-- Done -->
+    <section data-step="done" class="hidden" style="text-align:center">
+      <div style="font-size:48px" aria-hidden="true">✅</div>
+      <h2>Thanks, your report is in</h2>
+      <p class="muted" id="doneText"></p>
+      <div class="actions" style="justify-content:center">
+        <button type="button" class="btn btn-primary" id="again">Report another</button>
+        <a class="btn btn-ghost" href="/check">Check a message</a>
+      </div>
+    </section>
+  </form>
+</main>
+<script src="/static/js/common.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const KINDS = {
+    upi: { label: "The UPI ID", placeholder: "scammer@ybl", check: (v) => /^[\w.\-]{2,}@[a-z][a-z0-9]{1,63}$/i.test(v),
+           error: "That doesn't look like a UPI ID (for example name@ybl)." },
+    phone: { label: "The phone number", placeholder: "98765 43210", check: (v) => /^[6-9]\d{9}$/.test(v.replace(/\D/g, "").slice(-10)),
+             error: "Enter a 10-digit Indian mobile number." },
+    domain: { label: "The website", placeholder: "fake-hr-portal.in", check: (v) => /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(cleanDomain(v)),
+              error: "Enter a website like fake-hr-portal.in." },
+    email: { label: "The email address", placeholder: "hr.desk@gmail.com", check: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+             error: "That doesn't look like an email address." },
+  };
+  const TYPE_LABEL = { fee_demand: "Asked for a fee", task_scam: "Task / part-time job scam", fake_offer_letter: "Fake offer letter",
+                       fake_recruiter: "Fake recruiter / HR", identity_theft: "Wanted my documents", other: "Something else" };
+  const state = { kind: "upi", type: null, step: 1 };
+
+  function cleanDomain(v) { return v.trim().toLowerCase().replace(/^https?:\/\//, "").split("/")[0].replace(/^www\./, ""); }
+  function normalized() {
+    const v = $("value").value.trim();
+    if (state.kind === "phone") return v.replace(/\D/g, "").slice(-10);
+    if (state.kind === "domain") return cleanDomain(v);
+    return v.toLowerCase();
+  }
+
+  function pick(groupId, attr, value) {
+    document.querySelectorAll(`#${groupId} .choice`).forEach((c) => c.setAttribute("aria-pressed", c.dataset[attr] === value));
+  }
+
+  function setKind(kind) {
+    state.kind = kind;
+    pick("kinds", "kind", kind);
+    $("valueLabel").textContent = KINDS[kind].label;
+    $("value").placeholder = KINDS[kind].placeholder;
+    lookup();
+  }
+  $("kinds").addEventListener("click", (e) => { const c = e.target.closest("[data-kind]"); if (c) { setKind(c.dataset.kind); $("value").focus(); } });
+  $("types").addEventListener("click", (e) => { const c = e.target.closest("[data-type]"); if (c) { state.type = c.dataset.type; pick("types", "type", state.type); } });
+  $("note").addEventListener("input", () => ($("noteCount").textContent = `${$("note").value.length} / 500`));
+
+  // Live "has this been reported?" lookup while typing.
+  let timer;
+  function lookup() {
+    clearTimeout(timer);
+    const box = $("lookup");
+    if (!KINDS[state.kind].check($("value").value.trim())) { box.textContent = ""; return; }
+    box.innerHTML = '<span class="muted">Checking the network…</span>';
+    timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/reports/${state.kind}/${encodeURIComponent(normalized())}`);
+        const s = await res.json();
+        box.innerHTML = s.verified_count
+          ? `<span class="badge bad">⚠ Verified scam</span> Confirmed at ${s.colleges} college(s). Your report still helps.`
+          : s.pending_count
+            ? `<span class="badge">⏳ Reported</span> ${s.pending_count} student(s) reported this; waiting for review.`
+            : `<span class="badge ok">New</span> No reports yet. You'd be the first to warn others.`;
+      } catch { box.textContent = ""; }
+    }, 400);
+  }
+  $("value").addEventListener("input", lookup);
+
+  function go(step) {
+    state.step = step;
+    document.querySelectorAll("[data-step]").forEach((s) => s.classList.toggle("hidden", String(s.dataset.step) !== String(step)));
+    document.querySelectorAll(".progress-dots span").forEach((d, i) => d.classList.toggle("on", step === "done" || i < step));
+    if (step === 3) {
+      $("summary").innerHTML = `You're reporting the ${JSS.esc(KINDS[state.kind].label.replace("The ", ""))}
+        <strong>${JSS.esc(normalized())}</strong>. Scam type: <strong>${TYPE_LABEL[state.type]}</strong>.`;
+    }
+    document.querySelector(`[data-step="${step}"] input, [data-step="${step}"] select, [data-step="${step}"] button`)?.focus();
+  }
+
+  document.querySelectorAll("[data-next]").forEach((b) => b.addEventListener("click", () => {
+    if (state.step === 1 && !KINDS[state.kind].check($("value").value.trim())) {
+      JSS.toast(KINDS[state.kind].error); $("value").focus(); return;
+    }
+    if (state.step === 2 && !state.type) { JSS.toast("Pick the kind of scam (or 'Something else')."); return; }
+    go(state.step + 1);
+  }));
+  document.querySelectorAll("[data-back]").forEach((b) => b.addEventListener("click", () => go(state.step - 1)));
+  $("value").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); document.querySelector('[data-step="1"] [data-next]').click(); } });
+
+  $("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await JSS.busy($("submit"), "Submitting…", async () => {
+      try {
+        const { ok, status, data } = await JSS.api("/api/reports", {
+          kind: state.kind, value: $("value").value.trim(), scam_type: state.type,
+          college_code: $("college").value || null, note: $("note").value.trim() || null,
+        });
+        if (!ok) { JSS.toast(JSS.errorText(data, status)); if (status === 422) go(1); return; }
+        $("doneText").textContent = `${data.value} was reported${data.college ? ` to ${data.college}'s placement cell` : ""}. ` +
+          "Once an officer verifies it, students everywhere will be warned.";
+        go("done");
+      } catch (err) { JSS.toast(err.message); }
+    });
+  });
+
+  $("again").addEventListener("click", () => {
+    $("value").value = ""; $("note").value = ""; $("noteCount").textContent = "0 / 500";
+    state.type = null; pick("types", "type", null); $("lookup").textContent = ""; go(1);
+  });
+
+  fetch("/api/colleges").then((r) => r.json()).then((list) => {
+    for (const c of list) $("college").append(new Option(c.name, c.code));
+  }).catch(() => {});
+
+  // Prefilled from a "Report this" button on a result page.
+  const pre = JSS.takeHashParams();
+  if (pre.kind && KINDS[pre.kind]) setKind(pre.kind);
+  if (pre.value) { $("value").value = pre.value; lookup(); }
+</script>
+</body>
+</html>
